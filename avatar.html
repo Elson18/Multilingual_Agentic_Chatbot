@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>HeyGen Avatar Interaction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            text-align: center;
+            padding: 30px;
+        }
+        input, textarea, button {
+            width: 300px;
+            padding: 10px;
+            margin: 10px;
+        }
+        video {
+            margin-top: 20px;
+            width: 360px;
+            border-radius: 10px;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h2>HeyGen Avatar Interaction</h2>
+
+<textarea id="textInput" placeholder="Enter text for avatar"></textarea><br>
+
+<button onclick="generateVideo()">Generate Avatar Video</button>
+
+<div id="status"></div>
+
+<video id="avatarVideo" controls></video>
+
+<script>
+async function generateVideo() {
+    const text = document.getElementById("textInput").value;
+    const status = document.getElementById("status");
+    const video = document.getElementById("avatarVideo");
+
+    status.innerText = "Generating video...";
+
+    const response = await fetch("https://api.heygen.com/v1/video.generate", {
+        method: "POST",
+        headers: {
+            "Authorization": "Bearer sk_V2_hgu_kcxc87DWS3J_cNqMWPjKKO5W8cuukKHg1T85El0r1vSJ", // ❌ DO NOT USE IN PROD
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            video_inputs: [{
+                character: {
+                    type: "avatar",
+                    avatar_id: "1660815129"
+                },
+                voice: {
+                    type: "text",
+                    input_text: text
+                }
+            }]
+        })
+    });
+
+    const result = await response.json();
+
+    if (!result.data || !result.data.video_id) {
+        status.innerText = "Failed to generate video";
+        return;
+    }
+
+    status.innerText = "Processing video...";
+
+    // Poll for video status
+    const videoId = result.data.video_id;
+    const interval = setInterval(async () => {
+        const res = await fetch(`https://api.heygen.com/v1/video/${videoId}`, {
+            headers: {
+                "Authorization": "Bearer YOUR_API_KEY"
+            }
+        });
+
+        const data = await res.json();
+
+        if (data.data.status === "completed") {
+            clearInterval(interval);
+            video.src = data.data.video_url;
+            status.innerText = "Video ready!";
+        }
+    }, 3000);
+}
+</script>
+
+</body>
+</html>

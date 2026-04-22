@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>HeyGen Live Avatar</title>
+</head>
+<body>
+
+<h2>HeyGen Live Avatar Interaction</h2>
+
+<input id="textInput" placeholder="Type something..." />
+<button onclick="sendText()">Send</button>
+
+<br><br>
+
+<video id="avatarVideo" autoplay playsinline muted></video>
+<audio id="avatarAudio" autoplay></audio>
+
+<script>
+let sessionId;
+let pc;
+
+const API_KEY = "sk_V2_hgu_kcxc87DWS3J_cNqMWPjKKO5W8cuukKHg1T85El0r1vSJ";
+const AVATAR_ID = "1660815129";
+
+async function startSession() {
+    const res = await fetch("https://api.heygen.com/v1/streaming.new", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            avatar_id: AVATAR_ID
+        })
+    });
+
+    const result = await res.json();
+    const data = result.data;
+
+    sessionId = data.session_id;
+
+    pc = new RTCPeerConnection({
+        iceServers: data.ice_servers
+    });
+
+    pc.ontrack = (event) => {
+        if (event.track.kind === "video") {
+            document.getElementById("avatarVideo").srcObject = event.streams[0];
+        }
+        if (event.track.kind === "audio") {
+            document.getElementById("avatarAudio").srcObject = event.streams[0];
+        }
+    };
+
+    await pc.setRemoteDescription({
+        type: "offer",
+        sdp: data.offer_sdp
+    });
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    await fetch("https://api.heygen.com/v1/streaming.start", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            session_id: sessionId,
+            answer_sdp: answer.sdp
+        })
+    });
+}
+
+async function sendText() {
+    const text = document.getElementById("textInput").value;
+
+    await fetch("https://api.heygen.com/v1/streaming.task", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${API_KEY}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            session_id: sessionId,
+            text: text
+        })
+    });
+}
+
+startSession();
+</script>
+
+</body>
+</html>

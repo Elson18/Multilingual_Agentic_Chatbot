@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sign In</title>
+
+<style>
+    /* YOUR CSS – UNCHANGED */
+    *{
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body{
+        background: linear-gradient(135deg, #c5e6ff, #fbd6d6, #ccfdec);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .signup-box{
+        width: 400px;
+        background: #ffffff;
+        padding: 35px;
+        border-radius: 15px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.12);
+    }
+
+    .signup-box h2{
+        text-align: center;
+        color: #3a4a6b;
+        margin-bottom: 25px;
+    }
+
+    .input-field{
+        margin-bottom: 18px;
+    }
+
+    .input-field label{
+        font-size: 14px;
+        color: #444;
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    .input-field input{
+        width: 100%;
+        padding: 11px;
+        border-radius: 10px;
+        border: 1px solid #ccc;
+    }
+
+    .signup-btn{
+        width: 100%;
+        padding: 12px;
+        background: #5b7fff;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 17px;
+        cursor: pointer;
+    }
+
+    .links{
+        text-align: center;
+        margin-top: 15px;
+    }
+
+    .links a{
+        color: #5b7fff;
+        text-decoration: none;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="signup-box">
+    <h2>Create Account</h2>
+
+    <div class="input-field">
+        <label>Username</label>
+        <input type="text" id="name">
+    </div>
+
+    <div class="input-field">
+        <label>Email</label>
+        <input type="email" id="email">
+    </div>
+
+    <div class="input-field">
+        <label>Mobile Number</label>
+        <input type="text" id="phone_no">
+    </div>
+
+    <div class="input-field">
+        <label>Password</label>
+        <input type="password" id="password">
+    </div>
+
+    <div class="input-field">
+        <label>Confirm Password</label>
+        <input type="password" id="re_password">
+    </div>
+
+    <button class="signup-btn" onclick="register()">Sign Up</button>
+
+    <div class="links">
+        <p><a href="login.html">Already have an account? Login</a></p>
+    </div>
+</div>
+
+<script>
+async function register() {
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone_no = document.getElementById("phone_no").value.trim();
+    const password = document.getElementById("password").value;
+    const re_password = document.getElementById("re_password").value;
+
+    if (!name || !email || !phone_no || !password || !re_password) {
+        alert("All fields are required");
+        return;
+    }
+
+    try {
+        const res = await fetch("http://127.0.0.1:8000/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name,
+                email,
+                phone_no,
+                password,
+                re_password
+            })
+        });
+
+        const data = await res.json();
+
+        if (res.status === 200 || res.status === 201) {
+            alert("Registration successful!");
+            window.location.href = "index.html";
+        } 
+        else {
+            alert(data.detail || "Registration failed");
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Server error");
+    }
+}
+</script>
+
+</body>
+</html>
